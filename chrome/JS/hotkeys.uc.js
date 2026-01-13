@@ -92,6 +92,15 @@ function key_move_tabs() {
       window.gBrowser.reloadTab(window.gBrowser.selectedTab);
     },
   }).autoAttach();
+
+  UC_API.Hotkeys.define({
+    id: "alt-s-sidebar",
+    modifiers: "alt",
+    key: "S",
+    command: (_window, _event) => {
+      SidebarController.handleToolbarButtonClick()
+    },
+  }).autoAttach();
 }
 
 key_move_tabs();
