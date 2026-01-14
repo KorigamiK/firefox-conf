@@ -51,6 +51,15 @@ function key_move_tabs() {
     },
   }).autoAttach({ suppressOriginalKey: true });
 
+  UC_API.Hotkeys.define({
+    id: "key_undo_close_tab",
+    modifiers: "alt shift",
+    key: "X",
+    command: (window, event) => {
+      SessionStore.undoCloseTab(window, 0);
+    },
+  }).autoAttach({ suppressOriginalKey: true });
+
   // create new tab with alt-c
   UC_API.Hotkeys.define({
     modifiers: "alt",
@@ -98,9 +107,10 @@ function key_move_tabs() {
     modifiers: "alt",
     key: "S",
     command: (_window, _event) => {
-      SidebarController.handleToolbarButtonClick()
+      SidebarController.handleToolbarButtonClick();
     },
   }).autoAttach();
+
 }
 
 key_move_tabs();
