@@ -55,7 +55,7 @@ function key_move_tabs() {
     id: "key_undo_close_tab",
     modifiers: "alt shift",
     key: "X",
-    command: (window, event) => {
+    command: (window, _event) => {
       SessionStore.undoCloseTab(window, 0);
     },
   }).autoAttach({ suppressOriginalKey: true });
@@ -67,9 +67,18 @@ function key_move_tabs() {
     id: "key_new_tab",
     command: (_win) => {
       // Create a new tab with the default new tab page
-      const newTab = gBrowser.addTrustedTab(BROWSER_NEW_TAB_URL);
-      // Focus/select the new tab
-      gBrowser.selectedTab = newTab;
+      gBrowser.addAdjacentTab(
+        gBrowser.selectedTab,
+        BROWSER_NEW_TAB_URL,
+        {
+          inBackground: false, // select it
+          triggeringPrincipal: Services.scriptSecurityManager
+            .getSystemPrincipal(),
+          // optional: keep same container/group
+          userContextId: gBrowser.selectedTab.userContextId,
+          tabGroup: gBrowser.selectedTab.group,
+        },
+      );
     },
   }).autoAttach({ suppressOriginalKey: true });
 
@@ -110,7 +119,6 @@ function key_move_tabs() {
       SidebarController.handleToolbarButtonClick();
     },
   }).autoAttach();
-
 }
 
 key_move_tabs();
