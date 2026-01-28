@@ -119,6 +119,44 @@ function key_move_tabs() {
       SidebarController.handleToolbarButtonClick();
     },
   }).autoAttach();
+
+  UC_API.Hotkeys.define({
+    id: "key_copy_current_url",
+    modifiers: "accel alt",
+    key: "C",
+    reserved: "true",
+    command: (win) => {
+      let uri = win.gURLBar.makeURIReadable(win.gBrowser.currentURI);
+      let val;
+      if (uri.schemeIs("javascript") || uri.schemeIs("data")) {
+        val = win.gURLBar._lastValidURLStr || win.gURLBar.value;
+      } else {
+        val = uri.displaySpec;
+      }
+      if (val) {
+        Components.classes["@mozilla.org/widget/clipboardhelper;1"]
+          .getService(Components.interfaces.nsIClipboardHelper)
+          .copyString(val);
+
+        UC_API.Notifications.show({
+          label: "Copied URL",
+          type: "copy-url",
+          priority: "info",
+          window: win,
+          tab: win.gBrowser.selectedTab,
+        });
+
+        win.setTimeout(() => {
+          let aNotificationBox = win.gBrowser.getNotificationBox(win.gBrowser.selectedBrowser);
+          let notification = aNotificationBox.getNotificationWithValue("copy-url");
+          if (notification) {
+            aNotificationBox.removeNotification(notification);
+          }
+        }, 1000);
+      }
+    },
+  }).autoAttach({ suppressOriginalKey: true });
+
 }
 
 key_move_tabs();
