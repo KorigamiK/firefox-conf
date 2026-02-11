@@ -6,6 +6,42 @@
 // ==/UserScript==
 
 function key_move_tabs() {
+  const POP_OUT_SOURCE_WINDOW_KEY = "ucjsHotkeysPopOutSourceWindowId";
+
+  function getBrowserWindows() {
+    let windows = [];
+    let enumerator = Services.wm.getEnumerator("navigator:browser");
+    while (enumerator.hasMoreElements()) {
+      let browserWindow = enumerator.getNext();
+      if (!browserWindow.closed) {
+        windows.push(browserWindow);
+      }
+    }
+    return windows;
+  }
+
+  function findWindowByOuterId(outerWindowId) {
+    if (!outerWindowId) {
+      return null;
+    }
+
+    for (let browserWindow of getBrowserWindows()) {
+      if (`${browserWindow.windowUtils.outerWindowID}` === `${outerWindowId}`) {
+        return browserWindow;
+      }
+    }
+    return null;
+  }
+
+  function findOtherWindow(currentWindow) {
+    for (let browserWindow of getBrowserWindows()) {
+      if (browserWindow !== currentWindow) {
+        return browserWindow;
+      }
+    }
+    return null;
+  }
+
   UC_API.Hotkeys.define({
     modifiers: "alt",
     key: "J",
@@ -39,6 +75,45 @@ function key_move_tabs() {
     id: "key_move_tab_down",
     command: (_win) => {
       gBrowser.moveTabForward();
+    },
+  }).autoAttach({ suppressOriginalKey: true });
+
+  UC_API.Hotkeys.define({
+    modifiers: "alt shift",
+    key: "P",
+    id: "key_toggle_tab_popout",
+    command: (win) => {
+      let tab = win.gBrowser.selectedTab;
+      if (!tab) {
+        return;
+      }
+
+      let sourceWindowId = "";
+      try {
+        sourceWindowId = SessionStore.getCustomTabValue(tab, POP_OUT_SOURCE_WINDOW_KEY);
+      } catch (_error) {}
+
+      if (sourceWindowId) {
+        let targetWindow = findWindowByOuterId(sourceWindowId) || findOtherWindow(win);
+        if (targetWindow && targetWindow !== win) {
+          SessionStore.deleteCustomTabValue(tab, POP_OUT_SOURCE_WINDOW_KEY);
+          let movedTab = targetWindow.gBrowser.adoptTab(
+            tab,
+            targetWindow.gBrowser.tabs.length,
+            true,
+          );
+          targetWindow.gBrowser.selectedTab = movedTab;
+          targetWindow.focus();
+        }
+        return;
+      }
+
+      SessionStore.setCustomTabValue(
+        tab,
+        POP_OUT_SOURCE_WINDOW_KEY,
+        `${win.windowUtils.outerWindowID}`,
+      );
+      win.gBrowser.replaceTabWithWindow(tab);
     },
   }).autoAttach({ suppressOriginalKey: true });
 
@@ -152,7 +227,47 @@ function key_move_tabs() {
           if (notification) {
             aNotificationBox.removeNotification(notification);
           }
-        }, 1000);
+        }, 500);
+      }
+    },
+  }).autoAttach({ suppressOriginalKey: true });
+
+  UC_API.Hotkeys.define({
+    id: "key_copy_current_url_markdown",
+    modifiers: "accel alt shift",
+    key: "C",
+    reserved: "true",
+    command: (win) => {
+      let uri = win.gURLBar.makeURIReadable(win.gBrowser.currentURI);
+      let url;
+      if (uri.schemeIs("javascript") || uri.schemeIs("data")) {
+        url = win.gURLBar._lastValidURLStr || win.gURLBar.value;
+      } else {
+        url = uri.displaySpec;
+      }
+      let title = win.gBrowser.contentTitle;
+
+      if (url) {
+        let val = `[${title}](${url})`;
+        Components.classes["@mozilla.org/widget/clipboardhelper;1"]
+          .getService(Components.interfaces.nsIClipboardHelper)
+          .copyString(val);
+
+        UC_API.Notifications.show({
+          label: "Copied Markdown Link",
+          type: "copy-url-markdown",
+          priority: "info",
+          window: win,
+          tab: win.gBrowser.selectedTab,
+        });
+
+        win.setTimeout(() => {
+          let aNotificationBox = win.gBrowser.getNotificationBox(win.gBrowser.selectedBrowser);
+          let notification = aNotificationBox.getNotificationWithValue("copy-url-markdown");
+          if (notification) {
+            aNotificationBox.removeNotification(notification);
+          }
+        }, 500);
       }
     },
   }).autoAttach({ suppressOriginalKey: true });
