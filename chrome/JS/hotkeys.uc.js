@@ -46,8 +46,8 @@ function key_move_tabs() {
     modifiers: "alt",
     key: "J",
     id: "key_move_next",
-    command: (_win) => {
-      gBrowser.tabContainer.advanceSelectedTab(1, true);
+    command: (win) => {
+      win.gBrowser.tabContainer.advanceSelectedTab(1, true);
     },
   }).autoAttach({ suppressOriginalKey: true });
 
@@ -55,8 +55,8 @@ function key_move_tabs() {
     modifiers: "alt",
     key: "K",
     id: "key_move_prev",
-    command: (_win) => {
-      gBrowser.tabContainer.advanceSelectedTab(-1, true);
+    command: (win) => {
+      win.gBrowser.tabContainer.advanceSelectedTab(-1, true);
     },
   }).autoAttach({ suppressOriginalKey: true });
 
@@ -64,8 +64,8 @@ function key_move_tabs() {
     modifiers: "alt shift",
     key: "K",
     id: "key_move_tab_up",
-    command: (_win) => {
-      gBrowser.moveTabBackward();
+    command: (win) => {
+      win.gBrowser.moveTabBackward();
     },
   }).autoAttach({ suppressOriginalKey: true });
 
@@ -73,8 +73,8 @@ function key_move_tabs() {
     modifiers: "alt shift",
     key: "J",
     id: "key_move_tab_down",
-    command: (_win) => {
-      gBrowser.moveTabForward();
+    command: (win) => {
+      win.gBrowser.moveTabForward();
     },
   }).autoAttach({ suppressOriginalKey: true });
 
@@ -90,11 +90,15 @@ function key_move_tabs() {
 
       let sourceWindowId = "";
       try {
-        sourceWindowId = SessionStore.getCustomTabValue(tab, POP_OUT_SOURCE_WINDOW_KEY);
+        sourceWindowId = SessionStore.getCustomTabValue(
+          tab,
+          POP_OUT_SOURCE_WINDOW_KEY,
+        );
       } catch (_error) {}
 
       if (sourceWindowId) {
-        let targetWindow = findWindowByOuterId(sourceWindowId) || findOtherWindow(win);
+        let targetWindow = findWindowByOuterId(sourceWindowId) ||
+          findOtherWindow(win);
         if (targetWindow && targetWindow !== win) {
           SessionStore.deleteCustomTabValue(tab, POP_OUT_SOURCE_WINDOW_KEY);
           let movedTab = targetWindow.gBrowser.adoptTab(
@@ -121,8 +125,8 @@ function key_move_tabs() {
     modifiers: "alt",
     key: "X",
     id: "key_close_tab",
-    command: (_win) => {
-      gBrowser.removeCurrentTab();
+    command: (win) => {
+      win.gBrowser.removeCurrentTab();
     },
   }).autoAttach({ suppressOriginalKey: true });
 
@@ -140,18 +144,24 @@ function key_move_tabs() {
     modifiers: "alt",
     key: "C",
     id: "key_new_tab",
-    command: (_win) => {
+    command: (win) => {
+      let browser = win.gBrowser;
+      let selectedTab = browser.selectedTab;
+      if (!selectedTab) {
+        return;
+      }
+
       // Create a new tab with the default new tab page
-      gBrowser.addAdjacentTab(
-        gBrowser.selectedTab,
+      browser.addAdjacentTab(
+        selectedTab,
         BROWSER_NEW_TAB_URL,
         {
           inBackground: false, // select it
           triggeringPrincipal: Services.scriptSecurityManager
             .getSystemPrincipal(),
           // optional: keep same container/group
-          userContextId: gBrowser.selectedTab.userContextId,
-          tabGroup: gBrowser.selectedTab.group,
+          userContextId: selectedTab.userContextId,
+          tabGroup: selectedTab.group,
         },
       );
     },
@@ -162,8 +172,8 @@ function key_move_tabs() {
     modifiers: "alt",
     key: "H",
     id: "key_go_back",
-    command: (_win) => {
-      gBrowser.goBack();
+    command: (win) => {
+      win.gBrowser.goBack();
     },
   }).autoAttach({ suppressOriginalKey: true });
 
@@ -172,8 +182,8 @@ function key_move_tabs() {
     modifiers: "alt",
     key: "L",
     id: "key_go_forward",
-    command: (_win) => {
-      gBrowser.goForward();
+    command: (win) => {
+      win.gBrowser.goForward();
     },
   }).autoAttach({ suppressOriginalKey: true });
 
@@ -190,8 +200,8 @@ function key_move_tabs() {
     id: "alt-s-sidebar",
     modifiers: "alt",
     key: "S",
-    command: (_window, _event) => {
-      SidebarController.handleToolbarButtonClick();
+    command: (win, _event) => {
+      win.SidebarController.handleToolbarButtonClick();
     },
   }).autoAttach();
 
@@ -222,8 +232,12 @@ function key_move_tabs() {
         });
 
         win.setTimeout(() => {
-          let aNotificationBox = win.gBrowser.getNotificationBox(win.gBrowser.selectedBrowser);
-          let notification = aNotificationBox.getNotificationWithValue("copy-url");
+          let aNotificationBox = win.gBrowser.getNotificationBox(
+            win.gBrowser.selectedBrowser,
+          );
+          let notification = aNotificationBox.getNotificationWithValue(
+            "copy-url",
+          );
           if (notification) {
             aNotificationBox.removeNotification(notification);
           }
@@ -262,8 +276,12 @@ function key_move_tabs() {
         });
 
         win.setTimeout(() => {
-          let aNotificationBox = win.gBrowser.getNotificationBox(win.gBrowser.selectedBrowser);
-          let notification = aNotificationBox.getNotificationWithValue("copy-url-markdown");
+          let aNotificationBox = win.gBrowser.getNotificationBox(
+            win.gBrowser.selectedBrowser,
+          );
+          let notification = aNotificationBox.getNotificationWithValue(
+            "copy-url-markdown",
+          );
           if (notification) {
             aNotificationBox.removeNotification(notification);
           }
@@ -271,7 +289,6 @@ function key_move_tabs() {
       }
     },
   }).autoAttach({ suppressOriginalKey: true });
-
 }
 
 key_move_tabs();
