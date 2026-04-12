@@ -205,6 +205,16 @@ function key_move_tabs() {
     },
   }).autoAttach();
 
+
+  UC_API.Hotkeys.define({
+    id: "open-alltabs",
+    modifiers: "accel alt",
+    key: "B",
+    command: (win, _event) => {
+      win.SidebarController.toggle('viewTabsSidebar')
+    },
+  }).autoAttach();
+
   UC_API.Hotkeys.define({
     id: "key_copy_current_url",
     modifiers: "accel alt",
