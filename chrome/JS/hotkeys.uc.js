@@ -1,12 +1,13 @@
 // ==UserScript==
-// @name           Tab Navigation and Reordering Hotkeys
+// @name           Browser Hotkeys
 // @namespace      tab_navigation_hotkeys
 // @version        1.1
-// @description    Use alt-j and alt-k to navigate tabs, alt-J and alt-K to move tabs
+// @description    Custom Firefox keyboard shortcuts
 // ==/UserScript==
 
 function key_move_tabs() {
   const POP_OUT_SOURCE_WINDOW_KEY = "ucjsHotkeysPopOutSourceWindowId";
+  const IS_MACOS = Services.appinfo.OS === "Darwin";
 
   function getBrowserWindows() {
     let windows = [];
@@ -40,6 +41,27 @@ function key_move_tabs() {
       }
     }
     return null;
+  }
+
+  function selectTabByNumber(win, number) {
+    let tabs = win.gBrowser.visibleTabs || win.gBrowser.tabs;
+    let tab = number === 9 ? tabs[tabs.length - 1] : tabs[number - 1];
+    if (tab) {
+      win.gBrowser.selectedTab = tab;
+    }
+  }
+
+  if (IS_MACOS) {
+    for (let number = 1; number <= 9; number++) {
+      UC_API.Hotkeys.define({
+        id: `key_select_tab_${number}`,
+        modifiers: "alt",
+        key: `${number}`,
+        command: (win) => {
+          selectTabByNumber(win, number);
+        },
+      }).autoAttach({ suppressOriginalKey: true });
+    }
   }
 
   UC_API.Hotkeys.define({
@@ -194,7 +216,7 @@ function key_move_tabs() {
     command: (window, _event) => {
       window.gBrowser.reloadTab(window.gBrowser.selectedTab);
     },
-  }).autoAttach();
+  }).autoAttach({ suppressOriginalKey: true });
 
   UC_API.Hotkeys.define({
     id: "alt-s-sidebar",
@@ -203,22 +225,52 @@ function key_move_tabs() {
     command: (win, _event) => {
       win.SidebarController.handleToolbarButtonClick();
     },
-  }).autoAttach();
+  }).autoAttach({ suppressOriginalKey: true });
 
 
   UC_API.Hotkeys.define({
     id: "open-alltabs",
-    modifiers: "accel alt",
+    modifiers: "alt",
     key: "B",
     command: (win, _event) => {
       win.SidebarController.toggle('viewTabsSidebar')
     },
-  }).autoAttach();
+  }).autoAttach({ suppressOriginalKey: true });
+
+  UC_API.Hotkeys.define({
+    id: "key_open_search_menu",
+    modifiers: "alt",
+    key: "F",
+    command: (win) => {
+      win.gURLBar.focus();
+
+      let searchModeButton = win.document.getElementById(
+        "urlbar-searchmode-switcher",
+      );
+      let searchModePopup = win.document.getElementById(
+        "searchmode-switcher-popup",
+      );
+
+      if (searchModeButton && searchModePopup) {
+        searchModePopup.openPopup(searchModeButton, { triggerEvent: null });
+      }
+    },
+  }).autoAttach({ suppressOriginalKey: true });
+
+  UC_API.Hotkeys.define({
+    id: "key_focus_address_bar",
+    modifiers: "alt",
+    key: "D",
+    command: (win) => {
+      win.gURLBar.focus();
+      win.gURLBar.select();
+    },
+  }).autoAttach({ suppressOriginalKey: true });
 
   UC_API.Hotkeys.define({
     id: "key_copy_current_url",
-    modifiers: "accel alt",
-    key: "C",
+    modifiers: "alt",
+    key: "Y",
     reserved: "true",
     command: (win) => {
       let uri = win.gURLBar.makeURIReadable(win.gBrowser.currentURI);
@@ -258,8 +310,8 @@ function key_move_tabs() {
 
   UC_API.Hotkeys.define({
     id: "key_copy_current_url_markdown",
-    modifiers: "accel alt shift",
-    key: "C",
+    modifiers: "alt shift",
+    key: "Y",
     reserved: "true",
     command: (win) => {
       let uri = win.gURLBar.makeURIReadable(win.gBrowser.currentURI);
