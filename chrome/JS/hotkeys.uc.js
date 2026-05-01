@@ -65,6 +65,15 @@ function key_move_tabs() {
   }
 
   UC_API.Hotkeys.define({
+    id: "key_open_find_menu",
+    modifiers: "alt shift",
+    key: "F",
+    command: (win) => {
+      win.gLazyFindCommand('onFindCommand')
+    },
+  }).autoAttach({ suppressOriginalKey: true });
+
+  UC_API.Hotkeys.define({
     modifiers: "alt",
     key: "J",
     id: "key_move_next",
@@ -234,26 +243,6 @@ function key_move_tabs() {
     key: "B",
     command: (win, _event) => {
       win.SidebarController.toggle('viewTabsSidebar')
-    },
-  }).autoAttach({ suppressOriginalKey: true });
-
-  UC_API.Hotkeys.define({
-    id: "key_open_search_menu",
-    modifiers: "alt",
-    key: "F",
-    command: (win) => {
-      win.gURLBar.focus();
-
-      let searchModeButton = win.document.getElementById(
-        "urlbar-searchmode-switcher",
-      );
-      let searchModePopup = win.document.getElementById(
-        "searchmode-switcher-popup",
-      );
-
-      if (searchModeButton && searchModePopup) {
-        searchModePopup.openPopup(searchModeButton, { triggerEvent: null });
-      }
     },
   }).autoAttach({ suppressOriginalKey: true });
 
