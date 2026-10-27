@@ -1,11 +1,13 @@
 // ==UserScript==
 // @name           Browser Hotkeys
 // @namespace      tab_navigation_hotkeys
-// @version        1.1
+// @version        1.2
 // @description    Custom Firefox keyboard shortcuts
 // ==/UserScript==
 
 function key_move_tabs() {
+  // This script runs in each browser window, so attach only to that window.
+  // autoAttach() would register another global listener every time one opens.
   const POP_OUT_SOURCE_WINDOW_KEY = "ucjsHotkeysPopOutSourceWindowId";
   const IS_MACOS = Services.appinfo.OS === "Darwin";
 
@@ -60,7 +62,7 @@ function key_move_tabs() {
         command: (win) => {
           selectTabByNumber(win, number);
         },
-      }).autoAttach({ suppressOriginalKey: true });
+      }).attachToWindow(window, { suppressOriginal: true });
     }
   }
 
@@ -71,7 +73,7 @@ function key_move_tabs() {
     command: (win) => {
       win.gLazyFindCommand('onFindCommand')
     },
-  }).autoAttach({ suppressOriginalKey: true });
+  }).attachToWindow(window, { suppressOriginal: true });
 
   UC_API.Hotkeys.define({
     modifiers: "alt",
@@ -80,7 +82,7 @@ function key_move_tabs() {
     command: (win) => {
       win.gBrowser.tabContainer.advanceSelectedTab(1, true);
     },
-  }).autoAttach({ suppressOriginalKey: true });
+  }).attachToWindow(window, { suppressOriginal: true });
 
   UC_API.Hotkeys.define({
     modifiers: "alt",
@@ -89,7 +91,7 @@ function key_move_tabs() {
     command: (win) => {
       win.gBrowser.tabContainer.advanceSelectedTab(-1, true);
     },
-  }).autoAttach({ suppressOriginalKey: true });
+  }).attachToWindow(window, { suppressOriginal: true });
 
   UC_API.Hotkeys.define({
     modifiers: "alt shift",
@@ -98,7 +100,7 @@ function key_move_tabs() {
     command: (win) => {
       win.gBrowser.moveTabBackward();
     },
-  }).autoAttach({ suppressOriginalKey: true });
+  }).attachToWindow(window, { suppressOriginal: true });
 
   UC_API.Hotkeys.define({
     modifiers: "alt shift",
@@ -107,7 +109,7 @@ function key_move_tabs() {
     command: (win) => {
       win.gBrowser.moveTabForward();
     },
-  }).autoAttach({ suppressOriginalKey: true });
+  }).attachToWindow(window, { suppressOriginal: true });
 
   UC_API.Hotkeys.define({
     modifiers: "alt shift",
@@ -150,7 +152,7 @@ function key_move_tabs() {
       );
       win.gBrowser.replaceTabWithWindow(tab);
     },
-  }).autoAttach({ suppressOriginalKey: true });
+  }).attachToWindow(window, { suppressOriginal: true });
 
   UC_API.Hotkeys.define({
     modifiers: "alt",
@@ -159,7 +161,7 @@ function key_move_tabs() {
     command: (win) => {
       win.gBrowser.removeCurrentTab();
     },
-  }).autoAttach({ suppressOriginalKey: true });
+  }).attachToWindow(window, { suppressOriginal: true });
 
   UC_API.Hotkeys.define({
     id: "key_undo_close_tab",
@@ -168,13 +170,14 @@ function key_move_tabs() {
     command: (window, _event) => {
       SessionStore.undoCloseTab(window, 0);
     },
-  }).autoAttach({ suppressOriginalKey: true });
+  }).attachToWindow(window, { suppressOriginal: true });
 
   // create new tab with alt-c
   UC_API.Hotkeys.define({
     modifiers: "alt",
     key: "C",
     id: "key_new_tab",
+    reserved: "true",
     command: (win) => {
       let browser = win.gBrowser;
       let selectedTab = browser.selectedTab;
@@ -182,21 +185,10 @@ function key_move_tabs() {
         return;
       }
 
-      // Create a new tab with the default new tab page
-      browser.addAdjacentTab(
-        selectedTab,
-        BROWSER_NEW_TAB_URL,
-        {
-          inBackground: false, // select it
-          triggeringPrincipal: Services.scriptSecurityManager
-            .getSystemPrincipal(),
-          // optional: keep same container/group
-          userContextId: selectedTab.userContextId,
-          tabGroup: selectedTab.group,
-        },
-      );
+      // Use this window's new-tab page, retaining the container and tab group.
+      browser.addAdjacentNewTab(selectedTab);
     },
-  }).autoAttach({ suppressOriginalKey: true });
+  }).attachToWindow(window, { suppressOriginal: true });
 
   // Go Back (Alt+H)
   UC_API.Hotkeys.define({
@@ -206,7 +198,7 @@ function key_move_tabs() {
     command: (win) => {
       win.gBrowser.goBack();
     },
-  }).autoAttach({ suppressOriginalKey: true });
+  }).attachToWindow(window, { suppressOriginal: true });
 
   // Go Forward (Alt+L)
   UC_API.Hotkeys.define({
@@ -216,7 +208,7 @@ function key_move_tabs() {
     command: (win) => {
       win.gBrowser.goForward();
     },
-  }).autoAttach({ suppressOriginalKey: true });
+  }).attachToWindow(window, { suppressOriginal: true });
 
   UC_API.Hotkeys.define({
     id: "alt-z-reload",
@@ -225,7 +217,7 @@ function key_move_tabs() {
     command: (window, _event) => {
       window.gBrowser.reloadTab(window.gBrowser.selectedTab);
     },
-  }).autoAttach({ suppressOriginalKey: true });
+  }).attachToWindow(window, { suppressOriginal: true });
 
   UC_API.Hotkeys.define({
     id: "alt-s-sidebar",
@@ -234,7 +226,7 @@ function key_move_tabs() {
     command: (win, _event) => {
       win.SidebarController.handleToolbarButtonClick();
     },
-  }).autoAttach({ suppressOriginalKey: true });
+  }).attachToWindow(window, { suppressOriginal: true });
 
 
   UC_API.Hotkeys.define({
@@ -244,7 +236,7 @@ function key_move_tabs() {
     command: (win, _event) => {
       win.SidebarController.toggle('viewTabsSidebar')
     },
-  }).autoAttach({ suppressOriginalKey: true });
+  }).attachToWindow(window, { suppressOriginal: true });
 
   UC_API.Hotkeys.define({
     id: "key_focus_address_bar",
@@ -254,7 +246,7 @@ function key_move_tabs() {
       win.gURLBar.focus();
       win.gURLBar.select();
     },
-  }).autoAttach({ suppressOriginalKey: true });
+  }).attachToWindow(window, { suppressOriginal: true });
 
   UC_API.Hotkeys.define({
     id: "key_copy_current_url",
@@ -295,7 +287,7 @@ function key_move_tabs() {
         }, 500);
       }
     },
-  }).autoAttach({ suppressOriginalKey: true });
+  }).attachToWindow(window, { suppressOriginal: true });
 
   UC_API.Hotkeys.define({
     id: "key_copy_current_url_markdown",
@@ -339,7 +331,7 @@ function key_move_tabs() {
         }, 500);
       }
     },
-  }).autoAttach({ suppressOriginalKey: true });
+  }).attachToWindow(window, { suppressOriginal: true });
 }
 
 key_move_tabs();
